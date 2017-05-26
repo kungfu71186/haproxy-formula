@@ -7,3 +7,4 @@ haproxy.install:
       - {{ item }}
 {% endfor %}
 {% endif %}
+

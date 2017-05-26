@@ -1,0 +1,11 @@
+---
+# haproxy/defaults.yaml
+
+global:
+  log:
+    - /dev/log local0
+    - /dev/log local1 notice
+  user: haproxy
+  group: haproxy
+  chroot: /var/lib/haproxy
+  daemon: True

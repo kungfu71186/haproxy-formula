@@ -1,0 +1,47 @@
+{%- set key = 0 -%}
+{%- set value = 1 -%}
+{%- set carryovers = ['frontend', 'backend','listen'] -%}
+{%- macro haproxy_config(data, carryover='', listkey='', recurse=-1, indent=0) -%}
+  {%- set recurse = recurse + 1 -%}
+  {%- if data is none -%}
+    {{- '\n' -}}
+  {%- elif data is string or data is number -%}
+    {{- '%s %s'|format(listkey,data)|string|indent(indent, True) }}{{ '\n' -}}
+  {%- else -%}
+    {%- if recurse > 0 -%}
+      {{- '\n' -}}
+      {%- set indent = indent + 2 -%}
+    {%- endif -%}
+    {%- if data is mapping -%}
+      {%- for item in data|dictsort -%}
+        {%- if item[key] in carryovers -%}
+          {{- haproxy_config(item[value], carryover=item[key], indent=indent) -}}
+        {%- else -%}
+          {%- set carryIndent = indent -%}
+          {%- set forwardIndent = indent -%}
+          {%- if carryover -%}
+            {{- carryover|indent(indent, True) }}{{ ' ' -}}
+            {%- set carryIndent = 0 -%}
+          {%- endif -%}
+          {%- if item[value] is string or item[value] is not iterable -%}
+            {%- set forwardIndent = 0 -%}
+          {%- endif -%}
+          {%- if item[value] is not string and item[value] is iterable and item[value] is not mapping -%}
+            {%- set forwardIndent = 0 -%}
+            {{ haproxy_config(item[value], listkey=item[key], recurse=recurse, indent=forwardIndent) -}}
+          {%- else -%}
+            {{- item[key]|indent(carryIndent, True) }} {{ haproxy_config(item[value], recurse=recurse, indent=forwardIndent) -}}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- else -%}
+      {%- for item in data -%}
+        {{- haproxy_config(item, listkey=listkey, indent=indent) -}}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- if recurse > 0 -%}
+      {{ '\n' }}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro -%}
+
